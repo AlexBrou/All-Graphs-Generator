@@ -14,13 +14,19 @@ def allCombsWithSize(numberOfVertices, size):
     return xx
 
 
-def getAllGraphsWithNumberOfVertices(numberOfVertices):
-    graphsByVerticeNumber = {2: [[[1, 2]]]}
+def getAllGraphsWithNumberOfVertices(numberOfVertices, allConnected=True):
+    if allConnected:
+        graphsByVerticeNumber = {2: [[[1, 2]]]}
+    else:
+        graphsByVerticeNumber = {2: [[[1, 2]], []]}
 
     thisNumberOfVertices = 3
     while thisNumberOfVertices <= numberOfVertices:
         newOnes = []
         newCombs = allCombs(thisNumberOfVertices)
+        if not allConnected:
+            newCombs.append([])
+        print(thisNumberOfVertices, " -- ", newCombs)
         for graph in graphsByVerticeNumber[thisNumberOfVertices - 1]:
             for nn in newCombs:
                 newGraph = copy.deepcopy(graph)
@@ -33,7 +39,7 @@ def getAllGraphsWithNumberOfVertices(numberOfVertices):
 
 
 if __name__ == "__main__":
-    zz = getAllGraphsWithNumberOfVertices(4)
+    zz = getAllGraphsWithNumberOfVertices(4, allConnected=False)
 
     for xx in zz:
         print(xx)
