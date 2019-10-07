@@ -57,7 +57,16 @@ def getAllGraphsWithNumberOfVertices(numberOfVertices, allConnected=True):
         if not allConnected:
             newCombs.append([])
         # print(thisNumberOfVertices, " -- ", newCombs)
+        counter = 0
         for graph in graphsByVerticeNumber[thisNumberOfVertices - 1]:
+            if counter % 10 == 0:
+                print(
+                    "V num ",
+                    thisNumberOfVertices,
+                    " : ",
+                    counter / len(graphsByVerticeNumber[thisNumberOfVertices - 1]),
+                )
+            counter += 1
             for nn in newCombs:
                 newGraph = copy.deepcopy(graph)
                 for nnn in nn:
@@ -83,7 +92,8 @@ if __name__ == "__main__":
     g2 = [[1, 2], [3, 2]]
     print(compareGraph(g1, g2, 3))
 
-    zz = getAllGraphsWithNumberOfVertices(5, allConnected=True)
+    zz = getAllGraphsWithNumberOfVertices(6, allConnected=True)
 
     for xx in zz:
         print(xx)
+
