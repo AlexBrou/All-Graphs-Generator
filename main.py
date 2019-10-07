@@ -1,5 +1,34 @@
-from itertools import combinations
+from itertools import combinations, permutations
 import copy
+
+
+def checkIfGraphAlreadyInList(graph, graphList, numberOfVertices):
+    for oldGraph in graphList:
+        if compareGraph(graph, oldGraph, numberOfVertices):
+            return True
+    return False
+
+
+def compareGraph(originalGraph, newGraph, numberOfVertices):
+    if len(originalGraph) != len(newGraph):
+        return False
+
+    for perm in permutations(range(1, numberOfVertices + 1)):
+        # print("PERMUTATION: ", perm)
+        isTheSame = True
+        for edge in newGraph:
+            shiftedEdge = [perm[edge[0] - 1], perm[edge[1] - 1]]
+            # print("original: ", edge, " || shifted: ", shiftedEdge)
+            if shiftedEdge not in originalGraph:
+                if shiftedEdge[::-1] not in originalGraph:
+                    # print("not the same")
+                    isTheSame = False
+                    break
+        if isTheSame:
+            return True
+        # print()
+        # input("...")
+    return False
 
 
 def allCombs(numberOfVertices):
@@ -22,24 +51,39 @@ def getAllGraphsWithNumberOfVertices(numberOfVertices, allConnected=True):
 
     thisNumberOfVertices = 3
     while thisNumberOfVertices <= numberOfVertices:
+        # print("NUMBER OF VERTICES: ", thisNumberOfVertices, "\n")
         newOnes = []
         newCombs = allCombs(thisNumberOfVertices)
         if not allConnected:
             newCombs.append([])
-        print(thisNumberOfVertices, " -- ", newCombs)
+        # print(thisNumberOfVertices, " -- ", newCombs)
         for graph in graphsByVerticeNumber[thisNumberOfVertices - 1]:
             for nn in newCombs:
                 newGraph = copy.deepcopy(graph)
                 for nnn in nn:
                     newGraph.append([thisNumberOfVertices, nnn])
-                newOnes.append(newGraph)
+                # print("testing for: ", newGraph)
+                if not checkIfGraphAlreadyInList(
+                    newGraph, newOnes, thisNumberOfVertices
+                ):
+                    # print("good! added")
+                    newOnes.append(newGraph)
+                else:
+                    # print("already exists!")
+                    pass
+                # print()
+                # input("press enter...")
         graphsByVerticeNumber[thisNumberOfVertices] = newOnes
         thisNumberOfVertices += 1
     return graphsByVerticeNumber[numberOfVertices]
 
 
 if __name__ == "__main__":
-    zz = getAllGraphsWithNumberOfVertices(4, allConnected=False)
+    g1 = [[1, 2], [3, 1]]
+    g2 = [[1, 2], [3, 2]]
+    print(compareGraph(g1, g2, 3))
+
+    zz = getAllGraphsWithNumberOfVertices(5, allConnected=True)
 
     for xx in zz:
         print(xx)
