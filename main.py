@@ -190,15 +190,28 @@ def getNumberOfDegrees(xs):
 
 
 def allGraphsStatistics(xs, degrees=False):
+    sumOfAll = 0
     for li in xs:
         print("LENGHT ", len(li[0]), " == ", len(li))
+        sumOfAll += len(li)
+    print("\nSum of ALL: ", sumOfAll)
+
     print("\n\n\n")
     if degrees:
         for li in xs:
             for xs in li:
                 gn = getNumberOfDegrees(xs)
                 gnSum = sum(gn.values()) / len(xs)
-                print("LENGTH: ", len(xs), " || Degrees: ", gn, " // sum: ", gnSum)
+                print(
+                    "LENGTH: ",
+                    len(xs),
+                    " || Degrees: ",
+                    gn,
+                    " |||| EDGES: ",
+                    xs,
+                    " // ratio of sum(degrees)/nEdges: ",
+                    gnSum,
+                )
 
 
 def isLevel(xs):
@@ -245,7 +258,7 @@ if __name__ == "__main__":
     # print(len(gg))
     # allGraphsStatistics(gg, 3)
     # 6 / 0
-    numberOfVertices = 4
+    numberOfVertices = 6
     zz = getAllGraphsWithNumberOfVertices(numberOfVertices, allConnected=True)
     # print(zz)
     allGraphsStatistics(zz, degrees=True)
