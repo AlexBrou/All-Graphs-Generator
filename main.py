@@ -82,7 +82,7 @@ def getAllGraphsWithNumberOfVertices(numberOfVertices, allConnected=True):
         counter = 0
         for graphLevel in graphsByVerticeNumber[thisNumberOfVertices - 1]:
             # print("Graph Level : ", graphLevel, "// length: ", len(graphLevel[0]))
-            print("Graph length: ", len(graphLevel[0]))
+            # print("Graph length: ", len(graphLevel[0]))
             assert isLevel(graphLevel)
             for newCombsLevel in newCombs:
                 # print(

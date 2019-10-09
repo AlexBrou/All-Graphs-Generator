@@ -38,6 +38,11 @@ there is no use for a maximize function or minimize, just like the n-queens prob
 
 
 AND THEEERE YOU GO :D :D :D :D
+
+
+
+results are different from the non lp or cp method, but the sequence matches this:
+http://oeis.org/A007721
 """
 
 
