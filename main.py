@@ -1,5 +1,11 @@
 from itertools import combinations, permutations
 import copy
+import json
+
+
+def saveToJson(xs, numberOfVertices):
+    with open('arraysOfVertex'+str(numberOfVertices), 'w') as outfile:
+        json.dump({"content": xs}, outfile)
 
 
 def checkIfGraphAlreadyInList(graph, graphList, numberOfVertices):
@@ -258,10 +264,10 @@ if __name__ == "__main__":
     # print(len(gg))
     # allGraphsStatistics(gg, 3)
     # 6 / 0
-    numberOfVertices = 6
+    numberOfVertices = 7
     zz = getAllGraphsWithNumberOfVertices(numberOfVertices, allConnected=True)
+    saveToJson(zz, numberOfVertices)
     # print(zz)
     allGraphsStatistics(zz, degrees=True)
     # for xx in zz:
     #    print(xx)
-

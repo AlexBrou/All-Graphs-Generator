@@ -93,7 +93,8 @@ def SearchForAllSolutionsSampleSat(n_vertices, n_edges):
     # n_edges =
     variables = []
     for i in range(n_vertices):
-        v = model.NewIntVar(1, n_vertices - 1, "Vertex" + str(i + 1) + "_degree")
+        v = model.NewIntVar(1, n_vertices - 1, "Vertex" +
+                            str(i + 1) + "_degree")
         variables.append(v)
     # Creates the constraints.
     for i in range(n_vertices - 1):
@@ -125,7 +126,8 @@ def getGraphFromDegrees(degrees):
     # vertices variables
     verticesVariables = []
     for vv in range(1, numberOfVertices + 1):
-        vertVar = LpVariable("VERTEX_" + str(vv), 1, numberOfVertices - 1, LpInteger)
+        vertVar = LpVariable("VERTEX_" + str(vv), 1,
+                             numberOfVertices - 1, LpInteger)
         prob += vertVar == degrees[vv - 1]
         verticesVariables.append(vertVar)
 
@@ -134,7 +136,8 @@ def getGraphFromDegrees(degrees):
     for i in range(1, numberOfVertices + 1):
         for j in range(i + 1, numberOfVertices + 1):
             # print(i, " -- ", j)
-            edgeVar = LpVariable("EDGE_" + str(i) + "-" + str(j), 0, 1, LpInteger)
+            edgeVar = LpVariable("EDGE_" + str(i) + "-" +
+                                 str(j), 0, 1, LpInteger)
             if i not in edgeVariables.keys():
                 edgeVariables[i] = [edgeVar]
             else:
@@ -157,12 +160,13 @@ def getGraphFromDegrees(degrees):
                 # print(v.name, "=", v.varValue)
                 varNameSplit = v.name.split("_")
                 if varNameSplit[0] == "EDGE":
-                    returner.append([int(varNameSplit[1]), int(varNameSplit[2])])
+                    returner.append(
+                        [int(varNameSplit[1]), int(varNameSplit[2])])
         return returner
     return None
 
 
-n_vertices = 2
+n_vertices = 8
 counter = 0
 for n_edges in range(n_vertices - 1, int((n_vertices * (n_vertices - 1)) / 2) + 1):
 
@@ -174,11 +178,7 @@ for n_edges in range(n_vertices - 1, int((n_vertices * (n_vertices - 1)) / 2) + 
         ]
         if x != None
     ]
-    if n_edges == 0000:
-        for nnn in SearchForAllSolutionsSampleSat(n_vertices, n_edges):
-            print(nnn)
-        for sss in sols:
-            print(sss)
+
     print("EDGES: ", n_edges, "  ||  Number of solutions: ", len(sols))
     counter += len(sols)
 
