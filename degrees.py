@@ -3,6 +3,7 @@ This gets all the degrees arrays combinations with a linear algorithm, not using
 """
 
 from ortools.sat.python import cp_model
+from main import compareGraph
 
 
 def main(edges, nodes):
@@ -69,15 +70,24 @@ class VarArraySolutionPrinter(cp_model.CpSolverSolutionCallback):
         cp_model.CpSolverSolutionCallback.__init__(self)
         self.__variables = variables
         self.__solution_count = 0
+        self.__solutionsArray = []
 
     def on_solution_callback(self):
         self.__solution_count += 1
+        curSol = []
         for v in self.__variables:
-            print('%s=%i' % (v, self.Value(v)), end=' ')
-        print()
+            #print('%s=%i' % (v, self.Value(v)), end=' ')
+            if self.Value(v) == 1:
+                vv = v.Name().split("_")[1:]
+                curSol.append([int(v) for v in vv])
+        self.__solutionsArray.append(curSol)
+        # print()
 
     def solution_count(self):
         return self.__solution_count
+
+    def solutionArray(self):
+        return self.__solutionsArray
 
 
 def getAllGraphsFromDegreeArray(degArr, nodesNumber):
@@ -96,7 +106,7 @@ def getAllGraphsFromDegreeArray(degArr, nodesNumber):
         v = model.NewIntVar(smallestDegree, biggestDegree, 'VertDeg_'+str(i))
         nodesVars.append(v)
         for j in range(i+1, nodesNumber+1):
-            e = model.NewIntVar(0, 1, 'Edge_'+str(i)+'-'+str(j))
+            e = model.NewIntVar(0, 1, 'Edge_'+str(i)+'_'+str(j))
             if i in edgesDict.keys():
                 edgesDict[i].append(e)
             else:
@@ -117,17 +127,35 @@ def getAllGraphsFromDegreeArray(degArr, nodesNumber):
     solution_printer = VarArraySolutionPrinter(allEdges)
     status = solver.SearchForAllSolutions(model, solution_printer)
 
-    print('Status = %s' % solver.StatusName(status))
-    print('Number of solutions found: %i' % solution_printer.solution_count())
+    #print('Status = %s' % solver.StatusName(status))
+    #print('Number of solutions found: %i' % solution_printer.solution_count())
+    return solution_printer.solutionArray()
 
 
-nodeNumber = 4
+def getUniqueSols(solsArray, nodeNumber):
+    uniqueSols = []
+    for newGraph in solsArray:
+        uniqueFlag = True
+        for uniqueGraph in uniqueSols:
+            if compareGraph(newGraph, uniqueGraph, nodeNumber):
+                uniqueFlag = False
+                break
+        if uniqueFlag:
+            uniqueSols.append(newGraph)
+    return uniqueSols
+
+
+nodeNumber = 8
 sols = getAllDegreesByNodes(nodeNumber)
 print()
 for ss in sols:
     print(ss)
     print("FOR THE DISPLAY OF ", ss[0], " , of edges ", ss[1])
-    getAllGraphsFromDegreeArray(ss[0], nodeNumber)
+    solsArray = getAllGraphsFromDegreeArray(ss[0], nodeNumber)
+    uniqueSols = getUniqueSols(solsArray, nodeNumber)
+    print("Solutions Found: ", len(solsArray))
+    print("UNIQUE Solutions Found: ", len(uniqueSols))
+    # print(solsArray)
     print()
 
 #3 ,3 ,1 ,1
