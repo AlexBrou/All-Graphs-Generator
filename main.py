@@ -100,7 +100,7 @@ def getAllGraphsWithNumberOfVertices(numberOfVertices, allConnected=True):
                 if not (sumLength in lengthCounter.keys()) or checkLengthRules(
                     lengthCounter, sumLength, thisNumberOfVertices
                 ):
-                    print("early continue")
+                    # print("early continue")
                     continue
                 for graph in graphLevel:
                     assert isGraph(graph)
@@ -189,6 +189,16 @@ def getNumberOfDegrees(xs):
     return vertices
 
 
+def getAmountOfDegrees(xs):
+    vertsDeg = list(getNumberOfDegrees(xs).values())
+    degrees = {}
+    for i in range(1, len(vertsDeg)):
+        degrees[i] = 0
+    for i in vertsDeg:
+        degrees[i] += 1
+    return list(degrees.values())
+
+
 def allGraphsStatistics(xs, degrees=False):
     sumOfAll = 0
     for li in xs:
@@ -196,22 +206,33 @@ def allGraphsStatistics(xs, degrees=False):
         sumOfAll += len(li)
     print("\nSum of ALL: ", sumOfAll)
 
+    degQuantKeeper = []
+    repeatedCounter = 0
     print("\n\n\n")
     if degrees:
         for li in xs:
             for xs in li:
                 gn = getNumberOfDegrees(xs)
                 gnSum = sum(gn.values()) / len(xs)
+                degArr = getAmountOfDegrees(xs)
                 print(
                     "LENGTH: ",
                     len(xs),
                     " || Degrees: ",
-                    gn,
+                    list(gn.values()),
+                    " || Degrees Quant. ",
+                    degArr,
                     " |||| EDGES: ",
                     xs,
-                    " // ratio of sum(degrees)/nEdges: ",
-                    gnSum,
+                    # " // ratio of sum(degrees)/nEdges: ",
+                    # gnSum,
                 )
+                if degArr in degQuantKeeper:
+                    # print("DEGREE ARRAY REPEATED!")
+                    repeatedCounter += 1
+                else:
+                    degQuantKeeper.append(degArr)
+        print("REPEATED DEGREES SETUPS: ", repeatedCounter)
 
 
 def isLevel(xs):
@@ -258,10 +279,10 @@ if __name__ == "__main__":
     # print(len(gg))
     # allGraphsStatistics(gg, 3)
     # 6 / 0
-    numberOfVertices = 6
+    numberOfVertices = 7
     zz = getAllGraphsWithNumberOfVertices(numberOfVertices, allConnected=True)
     # print(zz)
-    allGraphsStatistics(zz, degrees=True)
+    allGraphsStatistics(zz, degrees=False)
     # for xx in zz:
     #    print(xx)
 
