@@ -61,6 +61,24 @@ from pulp import (
 from ortools.sat.python import cp_model
 
 
+def getOverlapEdgePairs(nVerts):
+    allEdges = []
+    for i in range(nVerts):
+        for j in range(i+1, nVerts):
+            allEdges.append([i, j])
+
+    # print(allEdges)
+    overlaps = []
+    for i in range(len(allEdges)):
+        for j in range(i+1, len(allEdges)):
+            fst = allEdges[i]
+            lst = allEdges[j]
+            if lst[0] > fst[0] and lst[0] < fst[1]:
+                if lst[1] > fst[1]:
+                    overlaps.append([fst, lst])
+    return overlaps
+
+
 class VarArraySolutionPrinter(cp_model.CpSolverSolutionCallback):
     """Print intermediate solutions."""
 
@@ -117,11 +135,10 @@ def SearchForAllSolutionsSampleSat(n_vertices, n_edges):
 
 
 def getGraphFromDegrees(degrees):
-    numberOfEdges = sum(degrees) / 2
+    #numberOfEdges = sum(degrees) / 2
     numberOfVertices = len(degrees)
 
-    prob = LpProblem("THE GRAPH CREATING PROBLEM", LpMinimize)
-    prob += 0
+    prob = LpProblem("THE_GRAPH_CREATING_PROBLEM", LpMinimize)
 
     # vertices variables
     verticesVariables = []
@@ -133,6 +150,9 @@ def getGraphFromDegrees(degrees):
 
     # edge variables
     edgeVariables = {}
+
+    edgeVariablesForOverlap = {}
+
     for i in range(1, numberOfVertices + 1):
         for j in range(i + 1, numberOfVertices + 1):
             # print(i, " -- ", j)
@@ -147,8 +167,40 @@ def getGraphFromDegrees(degrees):
             else:
                 edgeVariables[j].append(edgeVar)
 
+            if i not in edgeVariablesForOverlap.keys():
+                edgeVariablesForOverlap[i] = {}
+            if j not in edgeVariablesForOverlap[i].keys():
+                edgeVariablesForOverlap[i][j] = edgeVar
+            if j not in edgeVariablesForOverlap.keys():
+                edgeVariablesForOverlap[j] = {}
+            if i not in edgeVariablesForOverlap[j].keys():
+                edgeVariablesForOverlap[j][i] = edgeVar
+
     for i in edgeVariables:
         prob += lpSum(edgeVariables[i]) == verticesVariables[i - 1]
+
+    # overlaps
+    overlapVars = []
+    for fst, lst in getOverlapEdgePairs(numberOfVertices):
+        #print(fst, lst)
+        # now we get the edgeVars respectively
+
+        fstEdgeVar = edgeVariablesForOverlap[fst[0]+1][fst[1]+1]
+        lstEdgeVar = edgeVariablesForOverlap[lst[0]+1][lst[1]+1]
+        # print(fstEdgeVar)
+        # print(lstEdgeVar)
+
+        overlapVar = LpVariable(
+            "OVERLAP_" + str(fst) + "-" + str(lst), 0, 1, LpInteger)
+
+        prob += overlapVar >= fstEdgeVar + lstEdgeVar - 1
+        overlapVars.append(overlapVar)
+        # print()
+
+    # objective function: minimize the overlaps
+
+    prob += sum(overlapVars)
+
     # print("Solving...")
     prob.solve()
     statusText = LpStatus[prob.status]
