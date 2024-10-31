@@ -1,22 +1,17 @@
 from ortools.sat.python import cp_model
 import networkx as nx
 from tqdm import tqdm
+import json
 
-WITH_PRINT: bool = True
+OUTPUT_FILE = "output_graphs_of_{vertices_number}.json"
 
 ASCII_ART = """
-         o           o    o            o__ __o                                         o                   o__ __o                                                                   o                             
-        <|>         <|>  <|>          /v     v\                                       <|>                 /v     v\                                                                 <|>                            
-        / \         / \  / \         />       <\                                      / >                />       <\                                                                < >                            
-      o/   \o       \o/  \o/       o/               \o__ __o     o__ __o/  \o_ __o    \o__ __o         o/                 o__  __o   \o__ __o     o__  __o   \o__ __o     o__ __o/   |        o__ __o    \o__ __o  
-     <|__ __|>       |    |       <|       _\__o__   |     |>   /v     |    |    v\    |     v\       <|       _\__o__   /v      |>   |     |>   /v      |>   |     |>   /v     |    o__/_   /v     v\    |     |> 
-     /       \      / \  / \       \\          |    / \   < >  />     / \  / \    <\  / \     <\       \\          |    />      //   / \   / \  />      //   / \   < >  />     / \   |      />       <\  / \   < > 
-   o/         \o    \o/  \o/         \         /    \o/        \      \o/  \o/     /  \o/     o/         \         /    \o    o/     \o/   \o/  \o    o/     \o/        \      \o/   |      \         /  \o/       
-  /v           v\    |    |           o       o      |          o      |    |     o    |     <|           o       o      v\  /v __o   |     |    v\  /v __o   |          o      |    o       o       o    |        
- />             <\  / \  / \          <\__ __/>     / \         <\__  / \  / \ __/>   / \    / \          <\__ __/>       <\/> __/>  / \   / \    <\/> __/>  / \         <\__  / \   <\__    <\__ __/>   / \       
-                                                                           \o/                                                                                                                                     
-                                                                            |                                                                                                                                      
-                                                                           / \                                                                                                                                     
+   _____   .__   .__      ________                        .__        ________                                         __                 
+  /  _  \  |  |  |  |    /  _____/_______ _____   ______  |  |__    /  _____/   ____    ____    ____ _______ _____  _/  |_  ____ _______ 
+ /  /_\  \ |  |  |  |   /   \  ___\_  __ \\__  \  \____ \ |  |  \  /   \  ___ _/ __ \  /    \ _/ __ \\_  __ \\__  \ \   __\/  _ \\_  __ \
+/    |    \|  |__|  |__ \    \_\  \|  | \/ / __ \_|  |_> >|   Y  \ \    \_\  \\  ___/ |   |  \\  ___/ |  | \/ / __ \_|  | (  <_> )|  | \/
+\____|__  /|____/|____/  \______  /|__|   (____  /|   __/ |___|  /  \______  / \___  >|___|  / \___  >|__|   (____  /|__|  \____/ |__|   
+        \/                      \/             \/ |__|         \/          \/      \/      \/      \/             \/                                                                                                                                                       
 
 """
 
@@ -55,15 +50,13 @@ class VarArraySolutionPrinter(cp_model.CpSolverSolutionCallback):
 
     def on_solution_callback(self):
         self.__solution_count += 1
-        curSol = []
+        current_solution = []
         for v in self.__variables:
-            # print('%s=%i' % (v, self.Value(v)), end=' ')
             if self.Value(v) == 1:
-                vv = v.Name().split("_")[1:]
-                assert len(vv) == 2
-                curSol.append([int(v) for v in vv])
-        self.__solutionsArray.append(curSol)
-        # print()
+                var_str = v.Name().split("_")[1:]
+                assert len(var_str) == 2
+                current_solution.append([int(var_str_val) for var_str_val in var_str])
+        self.__solutionsArray.append(current_solution)
 
     def solution_count(self):
         return self.__solution_count
@@ -103,42 +96,36 @@ def get_all_graphs_from_degree_array(
     model = cp_model.CpModel()
 
     # Creates the variables.
-    nodesVars = []
-    biggestDegree = max(degree_array)
-    smallestDegree = min(degree_array)
+    nodes_variables = []
+    biggest_degree = max(degree_array)
+    smallest_degree = min(degree_array)
 
-    edgesDict = {}
-    allEdges = []
+    edges_dict = {}
+    all_edges = []
     for i in range(1, number_of_vertices + 1):
-        v = model.NewIntVar(smallestDegree, biggestDegree, "VertDeg_" + str(i))
-        nodesVars.append(v)
+        v = model.NewIntVar(smallest_degree, biggest_degree, "VertDeg_" + str(i))
+        nodes_variables.append(v)
         for j in range(i + 1, number_of_vertices + 1):
             e = model.NewIntVar(0, 1, "Edge_" + str(i) + "_" + str(j))
-            if i in edgesDict.keys():
-                edgesDict[i].append(e)
+            if i in edges_dict.keys():
+                edges_dict[i].append(e)
             else:
-                edgesDict[i] = [e]
-            if j in edgesDict.keys():
-                edgesDict[j].append(e)
+                edges_dict[i] = [e]
+            if j in edges_dict.keys():
+                edges_dict[j].append(e)
             else:
-                edgesDict[j] = [e]
-            allEdges.append(e)
+                edges_dict[j] = [e]
+            all_edges.append(e)
 
     for i in range(len(degree_array)):
-        model.Add(nodesVars[i] == degree_array[i])
-
-        model.Add(sum(edgesDict[i + 1]) == nodesVars[i])
+        model.Add(nodes_variables[i] == degree_array[i])
+        model.Add(sum(edges_dict[i + 1]) == nodes_variables[i])
 
     solver = cp_model.CpSolver()
-    solution_printer = VarArraySolutionPrinter(allEdges)
-    status = solver.SearchForAllSolutions(model, solution_printer)
+    solution_printer = VarArraySolutionPrinter(all_edges)
+    _ = solver.SearchForAllSolutions(model, solution_printer)
 
     return solution_printer.solutionArray()
-
-
-def my_print(arg) -> None:
-    if WITH_PRINT:
-        print(arg)
 
 
 def is_valid_degree_sequence(degree_sequence) -> bool:
@@ -161,10 +148,14 @@ if __name__ == "__main__":
     print(ASCII_ART)
 
     n_vertices: int = int(
-        input("Please insert the number of vertices of your Graph").strip()
+        input("Please insert the number of vertices of your Graph: ").strip()
     )
 
+    current_output_file = OUTPUT_FILE.format(vertices_number=n_vertices)
+
     total_isomorphic_graphs: int = 0
+
+    all_isomorphic_graphs: dict[str, list[tuple[int, int]]] = {}
 
     min_number_of_edges, max_number_of_edges = get_interval_of_potential_edges(
         n_vertices
@@ -173,7 +164,7 @@ if __name__ == "__main__":
     for cur_number_of_edges in tqdm(
         range(min_number_of_edges, max_number_of_edges + 1)
     ):
-        my_print(f"Current number of EDGES: {cur_number_of_edges}")
+        print(f"Current number of EDGES: {cur_number_of_edges}")
 
         all_degree_combinations = get_all_degree_combinations(
             num_vertices=n_vertices,
@@ -187,12 +178,12 @@ if __name__ == "__main__":
         ]
 
         for degree_combination in tqdm(valid_degree_combinations):
-            my_print(f"Current Degree combination: {degree_combination}")
+            print(f"Current Degree combination: {degree_combination}")
 
             all_graphs_found = get_all_graphs_from_degree_array(
                 degree_combination, n_vertices
             )
-            my_print(f"Number of ALL Graphs found: {len(all_graphs_found)}")
+            print(f"Number of ALL Graphs found: {len(all_graphs_found)}")
 
             all_unique_graphs_found, useless_counter = filter_out_isomorphic(
                 all_graphs_found
@@ -200,12 +191,19 @@ if __name__ == "__main__":
             total_isomorphic_graphs += len(all_unique_graphs_found)
             assert len(all_unique_graphs_found) > 0
 
-            my_print(
-                f"Number of ALL UNIQUE Graphs found: {len(all_unique_graphs_found)}"
-            )
-            my_print(f"Useless counter: {useless_counter}")
+            all_isomorphic_graphs[str(degree_combination)] = [
+                list(x.edges) for x in all_unique_graphs_found
+            ]
 
-            my_print("-----")
-        my_print("\n")
+            print(f"Number of ALL UNIQUE Graphs found: {len(all_unique_graphs_found)}")
+            print(f"Useless counter: {useless_counter}")
+
+            print("-----")
+        print("\n")
 
     print(f"TOTAL GRAPHS OF {n_vertices} VERTICES: {total_isomorphic_graphs}")
+
+    with open(current_output_file, "w") as f:
+        f.write(json.dumps(all_isomorphic_graphs))
+
+    print(f"Result exported to {current_output_file}")
